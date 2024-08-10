@@ -199,8 +199,10 @@ function main(filename)
     #println(rhs)
     grammar = HerbGrammar.read_csg("output.txt")
     programs = map(x -> rulenode2expr(x, grammar), 
-        collect(BFSIterator(grammar, :FILE; max_size=10, max_depth=5)))[1:4]
-    println(programs)
+        collect(DFSIterator(grammar, :FILE; max_size=10, max_depth=5)))
+    for p in programs
+        println(p)
+    end
 
 end
 
