@@ -17,6 +17,8 @@ struct ProductionRule
 end
 
 function main(filename)
+
+    #----------Grammmar parsing---------------
     file = read(filename, String)
     omit = zeros(Bool, length(file))
     preludeStart = findfirst("%{", file)[1]
@@ -142,6 +144,11 @@ function main(filename)
 
     println(final)
 
+    #------Herb grammar output--------
+    kwrds = read("./scripts/keywords.txt", String) |> x -> split(x, '\n') |> x -> map((y -> map(strip, y)) ∘ split, x)
+    kwrds = map(x -> [x[1], join(["\"", x[2], "\""])], kwrds) |> Dict
+
+    
     rules = Array{ProductionRule}(undef, 0)
     i = 1
     lhs = []
@@ -184,6 +191,7 @@ function main(filename)
                 if length(p) == 0
                     p = ["\"nothing\""]
                 end
+                p = map(x -> x[1] == '"' ? get(kwrds, chop(uppercase(x))[2:end], x) : x, p)
                 p = join(p, ", ")
                 append!(rhs, p)
                 write(file, name, " = (", p, ")\n")
@@ -195,13 +203,16 @@ function main(filename)
             #println(args)
         end
     end
+
+    #----------Generating programs---------------
+
     #println(lhs)
     #println(rhs)
     grammar = HerbGrammar.read_csg("output.txt")
     programs = map(x -> rulenode2expr(x, grammar), 
         collect(DFSIterator(grammar, :FILE; max_size=10, max_depth=5)))
     for p in programs
-        println(p)
+        println(p,)
     end
 
 end
