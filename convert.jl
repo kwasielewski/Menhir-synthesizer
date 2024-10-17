@@ -10,13 +10,13 @@ const skip_parametrized = false
 const skip_to_gen = false
 
 struct Production
-    rhs :: Array{String}
+    rhs::Array{String}
 end
 
 struct ProductionRule
-    name :: String
-    args :: Array{String}
-    prods :: Array{Production}
+    name::String
+    args::Array{String}
+    prods::Array{Production}
 end
 
 example = nothing
@@ -34,7 +34,7 @@ function main(filename, kwrdsfile)
 
     tokensEnd = findfirst("%%", file)[1]
     omit[tokensEnd] = true
-    omit[tokensEnd + 1] = true
+    omit[tokensEnd+1] = true
 
     # remove token declarations
     i = preludeStop
@@ -48,12 +48,12 @@ function main(filename, kwrdsfile)
         if lineEnd isa Nothing
             break
         end
-        lineEnd = lineEnd[1] 
+        lineEnd = lineEnd[1]
         for j in i+lineStart:i+lineStart+lineEnd
             omit[j] = true
         end
-        i = i+lineStart+lineEnd
-    end 
+        i = i + lineStart + lineEnd
+    end
 
     # remove comments
     i = 1
@@ -67,13 +67,13 @@ function main(filename, kwrdsfile)
         if lineEnd isa Nothing
             break
         end
-        lineEnd = lineEnd[1] 
+        lineEnd = lineEnd[1]
         for j in i+lineStart:i+lineStart+lineEnd
             omit[j] = true
         end
-        i = i+lineStart+lineEnd
-    end 
-   
+        i = i + lineStart + lineEnd
+    end
+
     # remove actions
     i = 1
     while i < length(file)
@@ -105,7 +105,7 @@ function main(filename, kwrdsfile)
             omit[j] = true
         end
         i = lineEnd
-    end 
+    end
 
     # remove bindings for actions
     i = 1
@@ -117,7 +117,7 @@ function main(filename, kwrdsfile)
                 omit[j] = true
                 j -= 1
             end
-            while file[j] !=  ' '
+            while file[j] != ' '
                 omit[j] = true
                 j -= 1
             end
@@ -136,7 +136,7 @@ function main(filename, kwrdsfile)
 
 
     final = join([file[i] for i in 1:length(file) if omit[i] == false])
-   
+
     global stdlib
     if stdlib
         stdfile = read("./standard.mly", String)
@@ -145,7 +145,7 @@ function main(filename, kwrdsfile)
 
     final = replace(final, " \n" => "\n")
     final = replace(final, "\n\n" => "\n")
-    
+
 
     println(final)
 
@@ -155,7 +155,7 @@ function main(filename, kwrdsfile)
     println(kwrds)
     kwrds = map(x -> [x[1], join(["\"", x[2], "\""])], kwrds) |> Dict
 
-    
+
     rules = Array{ProductionRule}(undef, 0)
     i = 1
     lhs = String[]
@@ -165,14 +165,14 @@ function main(filename, kwrdsfile)
         while i < length(final)
             j = i
             while !(final[j] in ['(', ' ', ':'])
-                j += 1 
+                j += 1
             end
             to_skip = final[j] == '('
             name = strip(final[i:j-1]) |> uppercase
             #println(name)
             args = []
             if final[j] == '('
-                k = j+1
+                k = j + 1
                 while final[k] != ')'
                     k += 1
                 end
@@ -183,7 +183,7 @@ function main(filename, kwrdsfile)
             args = map(x -> join(['"', x, '"']), args)
             cur_prod = ProductionRule(name, args, [])
             last_newline = nothing
-            k = j+2
+            k = j + 2
             while k <= length(final) && final[k] != ':'
                 if final[k] == '\n'
                     last_newline = k
@@ -203,11 +203,11 @@ function main(filename, kwrdsfile)
                     start = 1
                     i = 1
                     while i <= length(p)
-                        start = i 
-                        while i < length(p) && (balance != 0 || p[i] != ' ')  
+                        start = i
+                        while i < length(p) && (balance != 0 || p[i] != ' ')
                             if p[i] == '('
                                 balance += 1
-                            elseif  p[i] == ')'
+                            elseif p[i] == ')'
                                 balance -= 1
                             end
                             i += 1
@@ -226,7 +226,10 @@ function main(filename, kwrdsfile)
                 println(p)
                 #exit(0)
                 #println(name, " ", args)
-                p = map((x -> (isuppercase(x[1]) ? join(["\"", begin println("x & args ", x, args); (join(['"', x, '"']) in args ? x : lowercase(x)) end, "\""]) : uppercase(x))), p)
+                p = map((x -> (isuppercase(x[1]) ? join(["\"", begin
+                    println("x & args ", x, args)
+                    (join(['"', x, '"']) in args ? x : lowercase(x))
+                end, "\""]) : uppercase(x))), p)
                 if length(p) == 0
                     p = ["\"\""]
                 end
@@ -277,20 +280,21 @@ function main(filename, kwrdsfile)
         fullinst = ProductionRule[]
         parametrised = ProductionRule[]
         noninst = Queue{ProductionRule}()
-        for p in productions 
+        for p in productions
             if length(p.args) != 0
                 push!(parametrised, p)
             else
-                
+
                 check = y -> any(x -> '(' in x && ')' in x, y.rhs)
                 if any(check, p.prods)
+                    println("Enqueue noninst: ", p)
                     enqueue!(noninst, p)
-                else 
+                else
                     push!(fullinst, p)
                 end
             end
         end
-        
+
         println("Fullinst")
         for p in fullinst
             println(p)
@@ -303,10 +307,14 @@ function main(filename, kwrdsfile)
         if !isempty(noninst)
             println(first(noninst))
         end
-        
+
         println(length(fullinst), " ", length(parametrised), " ", length(productions))
         function encode(s::String)
-            return replace(s, "(" => "3", ")" => "4", "," => "5", " " => "")
+            if '(' in s && ')' in s 
+                return replace(s, "(" => "3", ")" => "4", "," => "5", " " => "")
+            else 
+                return s
+            end
         end
         function find_rule(rules::Vector{ProductionRule}, name)
             for r in rules
@@ -336,27 +344,101 @@ function main(filename, kwrdsfile)
         shortcut = 0
         #ProductionRule("LABELED", String[], Production[Production(["MANY1(LABELED_STATEMENT)"])])
         #ProductionRule("MANY1", ["P"], Production[Production(["\"P\"", "MANY(P)"])])
-        function replace2(s, rep)
-            if ! ('(' in s && ')' in s)
+        #=function replace2(s, rep; extra_debug=false)
+            if !('(' in s && ')' in s)
                 return s
             end
-            s = split(chop(s), '(')
-            args = split(s[2], ',')
+            s = split(chop(s), '(') # this split is not ok
+            s = map(x -> x * '(', s)
+            s[end] = chop(s[end])
+            args = mapreduce(x -> split(x, ','), vcat, s[2:end])
+            #args = split(s[2], ',')
+            if extra_debug
+                println("rep2")
+                println(rep)
+            end
             rep = map(x -> Pair(chop(x.first; head=1, tail=1), x.second), rep)
+            if extra_debug
+                println(rep)
+            end
             args = map(x -> x, replace(args, rep...))
-            return (join([s[1], '(', (join(args, ',')), ')']))
-        end
-        while ! isempty(noninst)
+            if extra_debug
+                println(args)
+            end
+            return (join([s[1], #='(',=# (join(args, ',')), #=')'=#]))
+        end=#
+        function replace2(input_str, replacements; extra_debug=false)
+            # Initialize stack to store each level of parsing
+            stack = []
+            current = ""  # This will hold the current function or argument being parsed
+            result = ""
+            #println(replacements)
+            replacements = map(x -> Pair(chop(x.first; head=1, tail=1), x.second), replacements) |> Dict
+            # Process each character
+            for c in input_str
+                if c == '('
+                    #println("Current at ( ", current)
+                    # We're entering a function call, so push the current function/arg and start fresh
+                    push!(stack, current)
+                    push!(stack, "(")
+                    current = ""
+                elseif c == ')'
+                    # We're closing a function call, so replace the deepest arguments and build the function
+                    #println("Current at ) ", current)
+                    current = strip(current)
+                    if haskey(replacements, current)
+                        #println("Replacing ", current)
+                        current = replacements[current]
+                    end
+        
+                    # Pop the stack and collect all arguments inside the current function call
+                    args = []
+                    while !isempty(stack) && stack[end] != "("
+                        push!(args, pop!(stack))
+                    end
+                    pop!(stack)  # Remove the '('
+        
+                    # Now we have the function name and arguments
+                    func_name = isempty(stack) ? "" : pop!(stack)
+                    current = func_name * "(" * join(reverse(args), "") * current * ")"
+                elseif c == ','
+                    #println("Current at , ", current)
+                    current = strip(current)
+                    # We hit a comma, meaning an argument ends. Handle the current argument.
+                    if haskey(replacements, current)
+                        #println("Replacing ", current)
+                        current = replacements[current]
+                    end
+                    push!(stack, current)
+                    push!(stack, ",")
+                    current = ""  # Reset to parse next argument
+                else
+                    # Collect characters into the current argument/function name
+                    current *= c
+                end
+            end
+            current = strip(current)
+        
+            # Handle any leftover string after processing all parentheses
+            if haskey(replacements, current)
+                current = replacements[current]
+            end
+            push!(stack, current)
+        
+            # Join everything in the stack to form the final result
+            return join(stack, "")
+        end 
+        while !isempty(noninst)
             r = dequeue!(noninst)
             all_ok = is_fully_inst(r)
             if all_ok
                 continue
             end
-            println(r)
+            println("Noninst: ", r)
             pr = nothing
             for p in r.prods
                 for (idx, q) in enumerate(p.rhs)
-                    cnt = count(x -> x =='(', q)
+                    cnt = count(x -> x == '(', q)
                     #LOPTION(SEPARATED_NONEMPTY_LIST(COMMA, ARITH_EXPRESSION))
                     if cnt == 1 && ')' in q
                         rule = split(q, '(')
@@ -367,44 +449,56 @@ function main(filename, kwrdsfile)
                             exit(1)
                         end
                         #println(pr)
+                        extra_debug  = encode(q) == "SEPARATED_LIST3COMMA5ARITH_EXPRESSION4"
+
+                        
                         rep = zip(pr.args, map(strip, split(chop(rule[2]), ',')))
                         rep = map(x -> Pair(x[1], String(x[2])), rep)
-                        println("Rep: ", rep, " ", rule)
+                        if extra_debug
+                            printstyled("Found rule ", pr, "\n"; color=:red)
+                            println(map(x -> Production(map(y -> replace(y, rep...), x.rhs)), pr.prods))
+                            println(map(x -> Production(map(y -> replace2(replace(y, rep...), rep; extra_debug=extra_debug), x.rhs)), pr.prods))
+                        end
+                        println("Rep: ", rep, " ", rule, " ", q)
                         new_rule = ProductionRule(encode(q),
-                                                                  [],
-                                                                  map(x -> Production(map(y -> replace2(replace(y, rep...), rep), x.rhs)), pr.prods))
+                            [],
+                            map(x -> Production(map(y -> replace2(replace(y, rep...), rep), x.rhs)), pr.prods))
                         p.rhs[idx] = encode(q)
                         #println("is_fully_inst: ", is_fully_inst(new_rule))
                         if is_fully_inst(new_rule) && find_rule(fullinst, new_rule.name) isa Nothing
                             push!(fullinst, new_rule)
                         elseif !is_fully_inst(new_rule)
-                            println("New rules: ", new_rule)
+                            println("New rules1: ", new_rule)
                             enqueue!(noninst, new_rule)
+                        end
+                        if extra_debug
+                            println()
                         end
 
                     elseif cnt == 2 && '(' in q # add more latter
+                        printstyled("Double inst\n"; color=:red)
                         #LOPTION(SEPARATED_NONEMPTY_LIST(COMMA, ARITH_EXPRESSION))
                         rule = split(q, '(')
                         #LOPTION SEPARATED_NONEMPTY_LIST COMMA, ARITH_EXPRESSION))
-                        #println(rule)
+                        println("RULE ", rule)
                         pr = find_rule(parametrised, rule[2])
                         if pr isa Nothing
                             println("Error 2 ", rule[2])
                             exit(1)
                         end
-                        #println(pr)
+                        println("found rule: ", pr)
                         argname = encode(join([rule[2], chop(rule[3])], "("))
                         rep = zip(pr.args, map(strip, split(chop(rule[3]; tail=2), ',')))
                         rep = map(x -> Pair(x[1], String(x[2])), rep)
                         new_rule = ProductionRule(argname,#encode(q),
-                                                                  [],
-                                                                  map(x -> Production(map(y -> replace2(replace(y, rep...), rep), x.rhs)), pr.prods))
+                            [],
+                            map(x -> Production(map(y -> replace2(replace(y, rep...), rep), x.rhs)), pr.prods))
                         #p.rhs[idx] = encode(q)
                         #println("is_fully_inst: ", is_fully_inst(new_rule))
                         if is_fully_inst(new_rule) && find_rule(fullinst, new_rule.name) isa Nothing
                             push!(fullinst, new_rule)
                         elseif !is_fully_inst(new_rule)
-                            println("New rules: ", new_rule)
+                            println("New rules2: ", new_rule)
                             enqueue!(noninst, new_rule)
                         end
 
@@ -417,17 +511,17 @@ function main(filename, kwrdsfile)
                         rep = zip(pr.args, [argname])
                         rep = map(x -> Pair(x[1], String(x[2])), rep)
                         new_rule = ProductionRule(encode(q),
-                                                                  [],
-                                                                  map(x -> Production(map(y -> replace2(replace(y, rep...), rep), x.rhs)), pr.prods))
-                        
-                        
+                            [],
+                            map(x -> Production(map(y -> replace2(replace(y, rep...), rep), x.rhs)), pr.prods))
+
+
                         if is_fully_inst(new_rule) && find_rule(fullinst, new_rule.name) isa Nothing
                             push!(fullinst, new_rule)
                         elseif !is_fully_inst(new_rule)
-                            println("New rules: ", new_rule)
+                            println("New rules3: ", new_rule)
                             enqueue!(noninst, new_rule)
                         end
-                        
+
                     end
                 end
             end
@@ -447,9 +541,9 @@ function main(filename, kwrdsfile)
         end
         println()
         println()
-        println("Lengths ", length(fullinst), " ", length(parametrised), " ", length(noninst), " ",length(productions))
+        println("Lengths ", length(fullinst), " ", length(parametrised), " ", length(noninst), " ", length(productions))
 
-        while ! isempty(noninst)
+        while !isempty(noninst)
             r = dequeue!(noninst)
             println(r.name)
             println(r.args)
@@ -459,17 +553,17 @@ function main(filename, kwrdsfile)
             println()
         end
         println()
-        
+
         for r in fullinst
             #println(r)
             for p in r.prods
                 #ps = join(map(x -> join([x, ","]), p.rhs), " ")
-                ps = join( p.rhs, ", ")
+                ps = join(map(encode, p.rhs), ", ")
                 #println(file, r.name, " = (", ps, ")")
                 write(file, r.name, " = (", ps, ")\n")
             end
-        end 
-        
+        end
+
     end
     #exit(1)
 
@@ -477,6 +571,7 @@ function main(filename, kwrdsfile)
 
     #println(lhs)
     #println(rhs)
+    # Change of output file due to skip of labeled variant
     grammar = HerbGrammar.read_csg("output1.txt")
     println(grammar)
     #programs = map(x -> rulenode2expr(x, grammar), 
@@ -490,7 +585,7 @@ function main(filename, kwrdsfile)
             return ""
         end
     end
-    
+
     ident = [0]
     function newId()
         ident[1] += 1
@@ -499,7 +594,7 @@ function main(filename, kwrdsfile)
     function toVec(e)
         e = collect(Any, e)
         for i in 1:length(e)
-            if e[i] isa Expr && e[i].head == :tuple 
+            if e[i] isa Expr && e[i].head == :tuple
                 e[i] = toVec(e[i].args)
             end
         end
@@ -523,7 +618,7 @@ function main(filename, kwrdsfile)
                 if e[1] == "function"
                     e[2] = newId()
                     push!(funs, e[2])
-    
+
                 end
                 if e[1] == "call"
                     e[2] = rand(funs)
@@ -537,7 +632,7 @@ function main(filename, kwrdsfile)
                     e[i] = rand(ctx)
                 end
             end
-            if e[end] ==  "}"
+            if e[end] == "}"
                 return e, funs, oldctx
             end
             return e, funs, ctx
