@@ -1,0 +1,20 @@
+name = "MenhirSynth"
+uuid = "47858089-2047-46f0-ab90-6adca9903ac3"
+authors = ["Krzysztof Wasielewski <krzychuwas@gmail.com>"]
+version = "0.1.0"
+
+[deps]
+DataStructures = "864edb3b-99cc-5e75-8d2d-829cb0a9cfe8"
+Herb = "c09c6b7f-4f63-49de-90d9-97a3563c0f4a"
+HerbGrammar = "4ef9e186-2fe5-4b24-8de7-9f7291f24af7"
+HerbInterpret = "5bbddadd-02c5-4713-84b8-97364418cca7"
+HerbSearch = "3008d8e8-f9aa-438a-92ed-26e9c7b4829f"
+HerbSpecification = "6d54aada-062f-46d8-85cf-a1ceaf058a06"
+
+[compat]
+DataStructures = "0.18.20"
+Herb = "0.4.0"
+HerbGrammar = "0.4.2"
+HerbInterpret = "0.1.4"
+HerbSearch = "0.3.1"
+HerbSpecification = "0.1.1"
