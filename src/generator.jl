@@ -37,7 +37,7 @@ function instantiate(e, funs, ctx)
                 e[2] = newId()
                 push!(ctx, e[2])
             end
-            if e[1] == "function"
+            if e[1] == "function" && e[2] != "main"
                 e[2] = newId()
                 push!(funs, e[2])
 
@@ -75,6 +75,35 @@ function stdout_generation(grammar)
         #println(instantiate(e, [], []))
         println(toString(instantiate(e, [], [])[1]))
         println()
+        if cnt > 200
+            break
+        end
+        if cnt == 0
+            global example
+            example = e
+        end
+        cnt += 1
+    end
+
+end
+
+function directory_generation(grammar)
+    cnt = 0
+    name = "progs_" * string(now())
+    mkdir("results/" * name)
+    for p in BFSIterator(grammar, :FILE; max_size=100, max_depth=100)
+        ident[1] = 0
+        e = rulenode2expr(p, grammar)
+        println(e)
+        e = toVec(e.args)
+        #println(e)
+        #println(instantiate(e, [], []))
+        program = toString(instantiate(e, [], [])[1])
+        println(program)
+        println()
+        open("results/" * name * "/" * string(cnt) * ".proc", "w") do file
+            write(file, program) 
+        end
         if cnt > 200
             break
         end

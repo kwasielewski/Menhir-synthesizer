@@ -22,10 +22,14 @@ function run(filename, kwrdsfile)
 
     kwrds = read_kwrds(kwrdsfile)
     convert2triple(grammar, kwrds)
-   
-    # remove instruction
+
     grammar = HerbGrammar.read_csg("output.txt")
+    # remove labeled statement variant
     HerbGrammar.remove_rule!(grammar, 2)
-    stdout_generation(grammar)
+    # remove starting rule and provide an quickstart
+    HerbGrammar.remove_rule!(grammar, 1)
+    HerbGrammar.add_rule!(grammar, :(FILE = ((RAW_MANY3FUNCTION_DEFINITION4, FUNCTION_DEFINITION), ("function", "main", "lparent", (""), "rparent", "curly_lparent", STRUCTURED_ORIGINAL, "curly_rparent"))))
+    #stdout_generation(grammar)
+    directory_generation(grammar)
     #return grammar
 end

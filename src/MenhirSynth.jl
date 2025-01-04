@@ -1,8 +1,8 @@
 module MenhirSynth
 
 using Herb
-using HerbGrammar, HerbSpecification, HerbSearch, HerbInterpret
-using DataStructures
+using HerbGrammar, HerbSearch
+using DataStructures, Dates
 
 include("common.jl")
 include("parser.jl")
