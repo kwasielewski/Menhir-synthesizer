@@ -23,7 +23,7 @@ function run(filename, kwrdsfile)
 	kwrds = read_kwrds(kwrdsfile)
 	convert2triple(grammar, kwrds)
 
-	grammar = HerbGrammar.read_csg("output.txt")
+	#grammar = HerbGrammar.read_csg("output.txt")
 	# remove labeled statement variant
 	HerbGrammar.remove_rule!(grammar, 2)
 	# remove starting rule and provide a quickstart
