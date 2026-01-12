@@ -565,14 +565,14 @@ function main(filename, kwrdsfile)
         end
 
     end
-    #exit(1)
+    exit(0)
 
     #----------Generating programs---------------
 
     #println(lhs)
     #println(rhs)
     # Change of output file due to skip of labeled variant
-    grammar = HerbGrammar.read_csg("output1.txt")
+    grammar = HerbGrammar.read_csg("output.txt")
     println(grammar)
     #programs = map(x -> rulenode2expr(x, grammar), 
     #    collect(DFSIterator(grammar, :FILE; max_size=20, max_depth=20)))
